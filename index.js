@@ -1,7 +1,4 @@
 import { MongoClient } from 'mongodb'
-import Stringify from 'fast-safe-stringify'
-
-import Query from './actions/query'
 
 class MongodbService {
     constructor(config){
@@ -25,9 +22,14 @@ class MongodbService {
         await this.client.connect()
     }
 
-    async Find(collection, filter){
-        // const filterKey = Stringify(filter)
-        const filterKey = JSON.stringify(filter)
+    async Find({ 
+        collection, 
+        filter = {}, 
+        sort = {}, 
+        limit = 0, 
+        skip = 0 
+    }){
+        const filterKey = `${ JSON.stringify(filter) }_${ JSON.stringify(sort) }_${ limit }_${ skip }`
         const queryTime = new Date().getTime()
         
         if(this.queries[filterKey] && this.queries[filterKey].queryTime > (queryTime - this.config.cache.maxMS)){
@@ -35,9 +37,18 @@ class MongodbService {
         }
 
         const db = this.client.db(this.config.database)
-        const items = await db.collection(collection).find(filter).toArray()
+        const items = await db.collection(collection)
+            .find(filter)
+            .sort(sort)
+            .skip(skip)
+            .limit(limit)
+        console.log('test')
 
-        this.queries[filterKey] = { queryTime, items }
+        this.queries[filterKey] = { queryTime, items: await items.toArray() }
+    }
+
+    async FindOne(collection, filter){
+
     }
 }
 
