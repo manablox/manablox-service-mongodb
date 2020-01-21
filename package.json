@@ -1,7 +1,7 @@
 {
   "name": "manablox-service-mongodb",
   "description": "MongoDB Service - Service module for manablox",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "repository": "https://github.com/manablox/manablox-service-mongodb.git",
   "main": "index.js",
   "license": "MIT",
