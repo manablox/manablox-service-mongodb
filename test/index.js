@@ -1,4 +1,8 @@
 import MongodbService from '../'
+import Time from 'manablox-utils/time'
+
+const time = new Time()
+const subTime = new Time()
 
 const databaseConfig = {
     database: 'manablox',
@@ -9,7 +13,7 @@ const databaseConfig = {
     },
     cache: {
         enabled: true,
-        maxMS: 100
+        maxMS: 200
     }
 }
 
@@ -18,20 +22,28 @@ const mongodb = new MongodbService(databaseConfig)
 const Start = async () => {
     await mongodb.Connect()
 
-    let startTime = new Date().getTime()
+    const filter = {
+        testing: 'bla'
+    }
 
-    console.log('start2')
+    time.StartTimer()
 
-    for(let i = 0; i < 10; i++){
-        await mongodb.Find({
-            collection: 'test',
-            query: {
-                testing: 'bla'
-            }
-        })
-    } 
+    for(let i = 0; i < 1000000; i++){
+        //console.log('Test #' + i)
+        
+        subTime.StartTimer()
 
-    console.log((new Date().getTime() - startTime) / 1000)
+        await mongodb.FindOne({ collection: 'test', filter: filter })
+        await mongodb.Find({ collection: 'test', filter: filter })
+
+        const queryTime = (subTime.GetTimerTime() * 0.001).toFixed(3)
+
+        //console.log('query time: ', queryTime + 's')
+    }
+
+    console.log(time.GetTimerTime() * 0.001)
+
+    
 }
 
 Start()

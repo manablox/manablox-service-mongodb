@@ -1,5 +1,9 @@
 import { MongoClient } from 'mongodb'
 
+import Time from 'manablox-utils/time'
+
+const time = new Time()
+
 class MongodbService {
     constructor(config){
         this.config = config
@@ -12,6 +16,9 @@ class MongodbService {
     get Client(){
         return this.client
     }
+    get DB(){
+        return this.client.db(this.config.database)
+    }
 
     Initialize(){
         console.log('initialize db connection', this.config)
@@ -22,6 +29,19 @@ class MongodbService {
         await this.client.connect()
     }
 
+    CreateQueryKey({ filter = {}, sort = null, limit = null, skip = null }){
+        const queryKey = `${ JSON.stringify(filter) }_${ JSON.stringify(sort) }_${ limit }_${ skip }`
+        return queryKey
+    }
+
+    GetCachedQuery(queryKey){
+        if(this.queries[queryKey] && this.queries[queryKey].queryTime > (time.Now - this.config.cache.maxMS)){
+            return this.queries[queryKey]
+        }
+
+        return false
+    }
+
     async Find({ 
         collection, 
         filter = {}, 
@@ -29,26 +49,34 @@ class MongodbService {
         limit = 0, 
         skip = 0 
     }){
-        const filterKey = `${ JSON.stringify(filter) }_${ JSON.stringify(sort) }_${ limit }_${ skip }`
-        const queryTime = new Date().getTime()
-        
-        if(this.queries[filterKey] && this.queries[filterKey].queryTime > (queryTime - this.config.cache.maxMS)){
-            return this.queries[filterKey]
-        }
+        const queryKey = this.CreateQueryKey({ filter, sort, limit, skip })
 
-        const db = this.client.db(this.config.database)
-        const items = await db.collection(collection)
+        const cachedQuery = this.GetCachedQuery(queryKey)
+        if(cachedQuery) return cachedQuery.result
+
+        let items = await this.DB.collection(collection)
             .find(filter)
             .sort(sort)
             .skip(skip)
             .limit(limit)
-        console.log('test')
+        items = await items.toArray()
 
-        this.queries[filterKey] = { queryTime, items: await items.toArray() }
+        this.queries[queryKey] = { queryTime: time.Now, result: items }
+
+        return items
     }
 
-    async FindOne(collection, filter){
+    async FindOne({ collection, filter }){
+        const queryKey = this.CreateQueryKey({ filter })
+        
+        const cachedQuery = this.GetCachedQuery(queryKey)
+        if(cachedQuery) return cachedQuery.result
 
+        let item = await this.DB.collection(collection).findOne(filter)
+
+        this.queries[queryKey] = { queryTime: time.Now, result: item }
+
+        return item
     }
 }
 
