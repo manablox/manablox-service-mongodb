@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/manablox/manablox-service-mongodb/compare/v1.2.2...v1.3.0) (2020-01-24)
+
+
+### Features
+
+* added update functionality ([7f16e15](https://github.com/manablox/manablox-service-mongodb/commit/7f16e1587d17c13d6db38d3ebecd5bf144edfaa9))
+
 ### [1.2.2](https://github.com/manablox/manablox-service-mongodb/compare/v1.2.1...v1.2.2) (2020-01-23)
 
 
