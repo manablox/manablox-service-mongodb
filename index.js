@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb'
+import { MongoClient, ObjectID } from 'mongodb'
 
 import Time from 'manablox-utils/time'
 
@@ -47,13 +47,18 @@ class MongodbService {
         filter = {}, 
         sort = {}, 
         limit = 0, 
-        skip = 0 
+        skip = 0,
+        nocache = false 
     }){
-        const queryKey = this.CreateQueryKey({ filter, sort, limit, skip })
+        let queryKey = null
+        let cachedQuery = null
 
-        const cachedQuery = this.GetCachedQuery(queryKey)
-        if(cachedQuery) return cachedQuery.result
-
+        if(!nocache){
+            queryKey = this.CreateQueryKey({ filter, sort, limit, skip })
+            cachedQuery = this.GetCachedQuery(queryKey)
+            if(cachedQuery) return cachedQuery.result
+        }
+        
         let items = await this.DB.collection(collection)
             .find(filter)
             .sort(sort)
@@ -61,22 +66,53 @@ class MongodbService {
             .limit(limit)
         items = await items.toArray()
 
-        this.queries[queryKey] = { queryTime: time.Now, result: items }
+        if(!nocache) this.queries[queryKey] = { queryTime: time.Now, result: items }
 
         return items
     }
+    async FindById(collection, id, { nocache } = { nocache: false }){
+        return await this.FindOne({ collection, filter: { _id: new ObjectID(id) }, nocache })
+    }
 
-    async FindOne({ collection, filter }){
-        const queryKey = this.CreateQueryKey({ filter })
-        
-        const cachedQuery = this.GetCachedQuery(queryKey)
-        if(cachedQuery) return cachedQuery.result
+    async FindOne({ collection, filter, nocache = false }){
+        let queryKey = null
+        let cachedQuery = null
+
+        if(!nocache){
+            queryKey = this.CreateQueryKey({ filter })
+            cachedQuery = this.GetCachedQuery(queryKey)
+            if(cachedQuery) return cachedQuery.result
+        }
 
         let item = await this.DB.collection(collection).findOne(filter)
 
-        this.queries[queryKey] = { queryTime: time.Now, result: item }
+        if(!nocache) this.queries[queryKey] = { queryTime: time.Now, result: item }
 
         return item
+    }
+
+    async Create({ collection, data }){
+        let insertMethod = 'insertOne'
+        if(Array.isArray(data)) insertMethod = 'insertMany'
+
+        const result = await this.DB.collection(collection)[insertMethod](data)
+
+        if(result.ops.length == 0) return false
+        if(result.ops.length == 1) return result.ops[0]
+
+        return result.ops
+    }
+
+    async UpdateById({ collection, id, data }){
+        return this.Update({ collection, query: { id }, data })
+    }
+
+    async Update({ collection, query, data }){
+        data = { $set: data }
+
+        const result = await this.DB.collection(collection).updateMany(query, data)
+
+        return result
     }
 }
 
