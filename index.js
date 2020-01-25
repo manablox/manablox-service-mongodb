@@ -103,16 +103,12 @@ class MongodbService {
         return result.ops
     }
 
-    async UpdateById({ collection, id, data }){
-        return this.Update({ collection, query: { id }, data })
+    async UpdateById(collection, id, data){
+        return this.Update({ collection, query: { _id: new ObjectID(id) }, data })
     }
 
     async Update({ collection, query, data }){
-        data = { $set: data }
-
-        const result = await this.DB.collection(collection).updateMany(query, data)
-
-        return result
+        return await this.DB.collection(collection).updateMany(query, { $set: data })
     }
 }
 
