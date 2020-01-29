@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/manablox/manablox-service-mongodb/compare/v1.3.1...v1.4.0) (2020-01-29)
+
+
+### Features
+
+* added delete functionality ([1226a23](https://github.com/manablox/manablox-service-mongodb/commit/1226a23f9b323d633983c6c861f561746170740f))
+
 ### [1.3.1](https://github.com/manablox/manablox-service-mongodb/compare/v1.3.0...v1.3.1) (2020-01-25)
 
 ## [1.3.0](https://github.com/manablox/manablox-service-mongodb/compare/v1.2.2...v1.3.0) (2020-01-24)
