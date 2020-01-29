@@ -104,11 +104,19 @@ class MongodbService {
     }
 
     async UpdateById(collection, id, data){
-        return this.Update({ collection, query: { _id: new ObjectID(id) }, data })
+        return await this.Update({ collection, query: { _id: new ObjectID(id) }, data })
     }
 
     async Update({ collection, query, data }){
         return await this.DB.collection(collection).updateMany(query, { $set: data })
+    }
+
+    async DeleteById(collection, id, data){
+        return await this.Delete({ collection, query: { _id: new ObjectID(id) }, data })
+    }
+
+    async Delete({ collection, query, data }){
+        return await this.DB.collection(collection).deleteMany(query)
     }
 }
 
